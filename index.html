@@ -297,7 +297,8 @@
             startTime: null,
             timerInterval: null,
             gridSize: 12,
-            squirrelCount: 30
+            squirrelCount: 30,
+            firstClick: true
         };
 
         const settings = {
@@ -318,6 +319,7 @@
             gameState.gameOver = false;
             gameState.won = false;
             gameState.startTime = null;
+            gameState.firstClick = true;
 
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 
@@ -326,20 +328,10 @@
             gridElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
             gridElement.innerHTML = '';
 
-            // Initialize board with squirrels
+            // Initialize board WITHOUT squirrels yet (will place on first click)
             const totalCells = size * size;
             for (let i = 0; i < totalCells; i++) {
                 gameState.board[i] = false;
-            }
-
-            // Place squirrels randomly
-            let placed = 0;
-            while (placed < squirrels) {
-                const idx = Math.floor(Math.random() * totalCells);
-                if (!gameState.board[idx]) {
-                    gameState.board[idx] = true;
-                    placed++;
-                }
             }
 
             // Create cells
@@ -362,8 +354,44 @@
             updateDisplay();
         }
 
+        function placeSquirrels(safeIndex) {
+            // Place squirrels after first click, avoiding the clicked cell and its neighbors
+            const size = gameState.gridSize;
+            const row = Math.floor(safeIndex / size);
+            const col = safeIndex % size;
+            const protectedCells = new Set();
+
+            // Mark the clicked cell and all neighbors as protected
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                        protectedCells.add(nr * size + nc);
+                    }
+                }
+            }
+
+            // Place squirrels randomly in non-protected cells
+            let placed = 0;
+            const totalCells = size * size;
+            while (placed < gameState.squirrelCount) {
+                const idx = Math.floor(Math.random() * totalCells);
+                if (!gameState.board[idx] && !protectedCells.has(idx)) {
+                    gameState.board[idx] = true;
+                    placed++;
+                }
+            }
+        }
+
         function revealCell(idx) {
             if (gameState.gameOver || gameState.won || gameState.flagged[idx] || gameState.revealed[idx]) return;
+
+            // Place squirrels on first click, avoiding this cell and neighbors
+            if (gameState.firstClick) {
+                placeSquirrels(idx);
+                gameState.firstClick = false;
+            }
 
             if (!gameState.startTime) {
                 gameState.startTime = Date.now();
