@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squirrel Sweep - Minesweeper Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #2d5016;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .controls {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2d5016;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: #2d5016;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #2d5016;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #3d6b1f;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(45, 80, 22, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            text-align: center;
+            margin: 1rem 0;
+            font-size: 1rem;
+            color: #666;
+            min-height: 24px;
+            font-weight: 500;
+        }
+
+        .status.win {
+            color: #2d5016;
+        }
+
+        .status.lose {
+            color: #d32f2f;
+        }
+
+        .board-container {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        #board {
+            display: inline-grid;
+            gap: 5px;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .cell:hover:not(.revealed) {
+            background: #f0f0f0;
+            border-color: #2d5016;
+            box-shadow: 0 2px 4px rgba(45, 80, 22, 0.2);
+        }
+
+        .cell.revealed {
+            cursor: default;
+            background: #e8e8e8;
+            border-color: #ccc;
+        }
+
+        .cell.flagged {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .cell.squirrel {
+            background: #ffcdd2;
+        }
+
+        .cell.safe:empty {
+            color: transparent;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .instructions {
+            background: #e8f5e9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #2d5016;
+            border-left: 4px solid #2d5016;
+        }
+
+        .instructions h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .instructions p {
+            margin: 0.25rem 0;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cell {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat:nth-child(3) {
+                grid-column: 1 / -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐿️ Squirrel Sweep</h1>
+            <p class="subtitle">Find all the acorns, avoid the squirrels!</p>
+        </div>
+
+        <div class="controls">
+            <div class="controls-grid">
+                <div class="stat">
+                    <div class="stat-label">Difficulty</div>
+                    <select id="difficulty">
+                        <option value="easy">Easy (8×8)</option>
+                        <option value="medium" selected>Medium (12×12)</option>
+                        <option value="hard">Hard (16×16)</option>
+                    </select>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Time</div>
+                    <div class="stat-value" id="timer">0:00</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Flags</div>
+                    <div class="stat-value" id="flagCount">0/10</div>
+                </div>
+            </div>
+            <button onclick="resetGame()">New Game</button>
+        </div>
+
+        <div class="status" id="gameStatus"></div>
+
+        <div class="board-container">
+            <div id="board"></div>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <p><strong>Left-click</strong> to reveal a cell</p>
+            <p><strong>Right-click</strong> to place a flag</p>
+            <p>Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
+        </div>
+
+        <div class="footer">
+            <p>Made with 🌰 by Squirrel Sweep • <a href="https://github.com" style="color: #2d5016; text-decoration: none;">View on GitHub</a></p>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            board: [],
+            revealed: [],
+            flagged: [],
+            gameOver: false,
+            won: false,
+            startTime: null,
+            timerInterval: null,
+            gridSize: 12,
+            squirrelCount: 30
+        };
+
+        const settings = {
+            easy: { size: 8, squirrels: 10 },
+            medium: { size: 12, squirrels: 30 },
+            hard: { size: 16, squirrels: 40 }
+        };
+
+        function initGame() {
+            const difficulty = document.getElementById('difficulty').value;
+            const { size, squirrels } = settings[difficulty];
+
+            gameState.gridSize = size;
+            gameState.squirrelCount = squirrels;
+            gameState.board = [];
+            gameState.revealed = Array(size * size).fill(false);
+            gameState.flagged = Array(size * size).fill(false);
+            gameState.gameOver = false;
+            gameState.won = false;
+            gameState.startTime = null;
+
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+
+            // Create grid
+            const gridElement = document.getElementById('board');
+            gridElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridElement.innerHTML = '';
+
+            // Initialize board with squirrels
+            const totalCells = size * size;
+            for (let i = 0; i < totalCells; i++) {
+                gameState.board[i] = false;
+            }
+
+            // Place squirrels randomly
+            let placed = 0;
+            while (placed < squirrels) {
+                const idx = Math.floor(Math.random() * totalCells);
+                if (!gameState.board[idx]) {
+                    gameState.board[idx] = true;
+                    placed++;
+                }
+            }
+
+            // Create cells
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+
+                cell.onmousedown = (e) => {
+                    e.preventDefault();
+                    if (e.button === 0) revealCell(i);
+                    if (e.button === 2) toggleFlag(i);
+                };
+
+                cell.oncontextmenu = (e) => e.preventDefault();
+
+                gridElement.appendChild(cell);
+            }
+
+            updateDisplay();
+        }
+
+        function revealCell(idx) {
+            if (gameState.gameOver || gameState.won || gameState.flagged[idx] || gameState.revealed[idx]) return;
+
+            if (!gameState.startTime) {
+                gameState.startTime = Date.now();
+                gameState.timerInterval = setInterval(updateTimer, 100);
+            }
+
+            gameState.revealed[idx] = true;
+
+            if (gameState.board[idx]) {
+                // Hit squirrel - game over
+                gameState.gameOver = true;
+                revealAll();
+                const status = document.getElementById('gameStatus');
+                status.textContent = '🐿️ Game Over! You found a squirrel!';
+                status.classList.add('lose');
+                clearInterval(gameState.timerInterval);
+                return;
+            }
+
+            // Count adjacent squirrels
+            const size = gameState.gridSize;
+            const row = Math.floor(idx / size);
+            const col = idx % size;
+            let squirrelCount = 0;
+
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = row + dr;
+                    const nc = col + dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                        if (gameState.board[nr * size + nc]) squirrelCount++;
+                    }
+                }
+            }
+
+            if (squirrelCount === 0) {
+                // Flood fill for empty areas
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const nr = row + dr;
+                        const nc = col + dc;
+                        const nidx = nr * size + nc;
+                        if (nr >= 0 && nr < size && nc >= 0 && nc < size && !gameState.revealed[nidx] && !gameState.flagged[nidx]) {
+                            revealCell(nidx);
+                        }
+                    }
+                }
+            }
+
+            checkWin();
+            updateDisplay();
+        }
+
+        function toggleFlag(idx) {
+            if (gameState.gameOver || gameState.won || gameState.revealed[idx]) return;
+            gameState.flagged[idx] = !gameState.flagged[idx];
+            updateDisplay();
+        }
+
+        function revealAll() {
+            for (let i = 0; i < gameState.board.length; i++) {
+                gameState.revealed[i] = true;
+            }
+            updateDisplay();
+        }
+
+        function checkWin() {
+            const size = gameState.gridSize;
+            const totalCells = size * size;
+            let revealedNonSquirrels = 0;
+
+            for (let i = 0; i < totalCells; i++) {
+                if (gameState.revealed[i] && !gameState.board[i]) {
+                    revealedNonSquirrels++;
+                }
+            }
+
+            if (revealedNonSquirrels === totalCells - gameState.squirrelCount) {
+                gameState.won = true;
+                const status = document.getElementById('gameStatus');
+                status.textContent = '🎉 You won! All acorns found!';
+                status.classList.add('win');
+                clearInterval(gameState.timerInterval);
+            }
+        }
+
+        function updateDisplay() {
+            const size = gameState.gridSize;
+
+            for (let i = 0; i < gameState.board.length; i++) {
+                const cell = document.querySelector(`[data-index="${i}"]`);
+
+                if (gameState.flagged[i]) {
+                    cell.textContent = '🌰';
+                    cell.classList.add('flagged', 'revealed');
+                } else if (gameState.revealed[i]) {
+                    cell.classList.add('revealed');
+                    if (gameState.board[i]) {
+                        cell.textContent = '🐿️';
+                        cell.classList.add('squirrel');
+                    } else {
+                        const row = Math.floor(i / size);
+                        const col = i % size;
+                        let squirrelCount = 0;
+
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                const nr = row + dr;
+                                const nc = col + dc;
+                                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                    if (gameState.board[nr * size + nc]) squirrelCount++;
+                                }
+                            }
+                        }
+
+                        cell.textContent = squirrelCount > 0 ? squirrelCount : '';
+                        cell.style.color = squirrelCount > 0 ? '#d32f2f' : 'transparent';
+                        cell.classList.add('safe');
+                    }
+                } else {
+                    cell.textContent = '';
+                    cell.classList.remove('flagged', 'revealed', 'squirrel', 'safe');
+                }
+            }
+
+            const flagged = gameState.flagged.filter(f => f).length;
+            document.getElementById('flagCount').textContent = `${flagged}/${gameState.squirrelCount}`;
+        }
+
+        function updateTimer() {
+            if (!gameState.startTime) return;
+            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('timer').textContent = '0:00';
+            document.getElementById('gameStatus').textContent = '';
+            document.getElementById('gameStatus').className = 'status';
+            initGame();
+        }
+
+        document.getElementById('difficulty').addEventListener('change', resetGame);
+
+        // Initialize game on load
+        initGame();
+    </script>
+</body>
+</html>
