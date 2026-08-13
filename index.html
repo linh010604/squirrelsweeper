@@ -4,250 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Squirrel Sweep - Minesweeper Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #1a1a1a;
-        }
-
-        .container {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 700px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #2d5016;
-        }
-
-        .subtitle {
-            font-size: 1rem;
-            color: #666;
-        }
-
-        .controls {
-            background: #f5f5f5;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            border: 1px solid #e0e0e0;
-        }
-
-        .controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #999;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: #2d5016;
-        }
-
-        select {
-            width: 100%;
-            padding: 0.75rem;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            background: white;
-            color: #1a1a1a;
-            font-size: 0.95rem;
-            cursor: pointer;
-        }
-
-        select:hover {
-            border-color: #2d5016;
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background: #2d5016;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-
-        button:hover {
-            background: #3d6b1f;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(45, 80, 22, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .status {
-            text-align: center;
-            margin: 1rem 0;
-            font-size: 1rem;
-            color: #666;
-            min-height: 24px;
-            font-weight: 500;
-        }
-
-        .status.win {
-            color: #2d5016;
-        }
-
-        .status.lose {
-            color: #d32f2f;
-        }
-
-        .board-container {
-            background: #f9f9f9;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: center;
-            overflow-x: auto;
-        }
-
-        #board {
-            display: inline-grid;
-            gap: 5px;
-        }
-
-        .cell {
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s ease;
-            font-weight: 600;
-            user-select: none;
-        }
-
-        .cell:hover:not(.revealed) {
-            background: #f0f0f0;
-            border-color: #2d5016;
-            box-shadow: 0 2px 4px rgba(45, 80, 22, 0.2);
-        }
-
-        .cell.revealed {
-            cursor: default;
-            background: #e8e8e8;
-            border-color: #ccc;
-        }
-
-        .cell.flagged {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .cell.squirrel {
-            background: #ffcdd2;
-        }
-
-        .cell.safe:empty {
-            color: transparent;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: #999;
-        }
-
-        .instructions {
-            background: #e8f5e9;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: #2d5016;
-            border-left: 4px solid #2d5016;
-        }
-
-        .instructions h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .instructions p {
-            margin: 0.25rem 0;
-        }
-
-        #chordToggle {
-            cursor: pointer;
-            accent-color: #2d5016;
-        }
-
-        label[for="chordToggle"] {
-            user-select: none;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            .cell {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-
-            .controls-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .stat:nth-child(3) {
-                grid-column: 1 / -1;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -256,16 +13,114 @@
             <p class="subtitle">Find all the acorns, avoid the squirrels!</p>
         </div>
 
-        <div class="controls">
-            <div class="controls-grid">
-                <div class="stat">
-                    <div class="stat-label">Difficulty</div>
-                    <select id="difficulty">
-                        <option value="easy">Easy (8×8)</option>
-                        <option value="medium" selected>Medium (12×12)</option>
-                        <option value="hard">Hard (16×16)</option>
-                    </select>
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('easy')">Easy</button>
+            <button class="tab-button" onclick="switchTab('medium')">Medium</button>
+            <button class="tab-button" onclick="switchTab('hard')">Hard</button>
+            <button class="tab-button" onclick="switchTab('custom')">Custom</button>
+            <button class="tab-button" onclick="switchTab('howtoplay')">❓ How to Play</button>
+        </div>
+
+        <!-- Easy Tab -->
+        <div id="easy" class="tab-content active">
+            <div class="controls">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <h3 style="color: #2d5016; margin: 0;">Easy (8×8)</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 0 0;">10 Squirrels</p>
                 </div>
+                <button onclick="resetGame()">New Game</button>
+            </div>
+        </div>
+
+        <!-- Medium Tab -->
+        <div id="medium" class="tab-content">
+            <div class="controls">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <h3 style="color: #2d5016; margin: 0;">Medium (12×12)</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 0 0;">30 Squirrels</p>
+                </div>
+                <button onclick="resetGame()">New Game</button>
+            </div>
+        </div>
+
+        <!-- Hard Tab -->
+        <div id="hard" class="tab-content">
+            <div class="controls">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <h3 style="color: #2d5016; margin: 0;">Hard (16×16)</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0 0 0;">40 Squirrels</p>
+                </div>
+                <button onclick="resetGame()">New Game</button>
+            </div>
+        </div>
+
+        <!-- Custom Tab -->
+        <div id="custom" class="tab-content">
+            <div class="controls">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <h3 style="color: #2d5016; margin: 0;">Custom Board</h3>
+                </div>
+
+                <div style="background: #f0f0f0; padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #ddd;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label for="customWidth" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Width</label>
+                            <input type="number" id="customWidth" min="4" max="100" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label for="customHeight" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Height</label>
+                            <input type="number" id="customHeight" min="4" max="100" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label for="customSquirrels" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Squirrels</label>
+                            <input type="number" id="customSquirrels" min="1" max="2480" value="30" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #999;">
+                        <span id="customStats">Grid: 12×12 (144 cells) • Squirrels: 30 (21% of board)</span>
+                    </div>
+                </div>
+
+                <button onclick="resetGame()">New Game</button>
+            </div>
+        </div>
+
+        <!-- How to Play Tab -->
+        <div id="howtoplay" class="tab-content">
+            <div style="background: #e8f5e9; padding: 1.5rem; border-radius: 12px; font-size: 0.9rem; color: #2d5016; border-left: 4px solid #2d5016;">
+                <h3 style="margin-top: 0; margin-bottom: 1rem;">How to Play</h3>
+                <p><strong>Left-click</strong> to reveal a cell</p>
+                <p><strong>Right-click</strong> to place a flag</p>
+                <p>Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
+                
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Features</h3>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Chord opening:</strong> When enabled, left-click a number with all surrounding squirrels flagged to auto-reveal safe cells around it.</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Cell size:</strong> Use the slider to adjust board size (50% = tiny, 100% = normal, 200% = huge).</p>
+                
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Difficulty Levels</h3>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Easy:</strong> 8×8 grid with 10 squirrels</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Medium:</strong> 12×12 grid with 30 squirrels</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Hard:</strong> 16×16 grid with 40 squirrels</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Custom:</strong> Create your own board size and squirrel count</p>
+            </div>
+        </div>
+
+        <!-- Shared Settings (Outside Tabs) -->
+        <div style="padding: 1rem 2rem; background: white; border-top: 1px solid #e0e0e0;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; padding: 12px; background: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0;">
+                <input type="checkbox" id="chordToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="chordToggle" style="cursor: pointer; flex: 1; color: #333; font-size: 0.95rem; margin: 0;">Enable chord opening</label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f5f5f5; border-radius: 8px; border: 1px solid #e0e0e0;">
+                <label for="cellSizeSlider" style="color: #333; font-size: 0.9rem; font-weight: 600; min-width: 80px;">Cell size:</label>
+                <input type="range" id="cellSizeSlider" min="50" max="200" value="100" step="10" style="flex: 1;">
+                <span id="cellSizeValue" style="color: #666; font-size: 0.9rem; min-width: 45px; text-align: right;">100%</span>
+            </div>
+        </div>
+
+        <!-- Game Stats (Outside Tabs) -->
+        <div style="padding: 1rem 2rem;">
+            <div class="controls-grid" style="margin-bottom: 1rem;">
                 <div class="stat">
                     <div class="stat-label">Time</div>
                     <div class="stat-value" id="timer">0:00</div>
@@ -275,25 +130,12 @@
                     <div class="stat-value" id="flagCount">0/10</div>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
-                <input type="checkbox" id="chordToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
-                <label for="chordToggle" style="cursor: pointer; flex: 1; color: #333; font-size: 0.95rem; margin: 0;">Enable chord opening (click numbers to reveal safe cells)</label>
-            </div>
-            <button onclick="resetGame()">New Game</button>
         </div>
 
         <div class="status" id="gameStatus"></div>
 
         <div class="board-container">
             <div id="board"></div>
-        </div>
-
-        <div class="instructions">
-            <h3>How to Play</h3>
-            <p><strong>Left-click</strong> to reveal a cell</p>
-            <p><strong>Right-click</strong> to place a flag</p>
-            <p>Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #1b5e20;"><strong>Chord feature:</strong> When enabled, left-click a number with all surrounding squirrels flagged to auto-reveal safe cells around it.</p>
         </div>
 
         <div class="footer">
@@ -311,26 +153,78 @@
             startTime: null,
             timerInterval: null,
             gridSize: 12,
+            gridWidth: 12,
+            gridHeight: 12,
             squirrelCount: 30,
             firstClick: true,
-            chordEnabled: true
+            chordEnabled: true,
+            currentDifficulty: 'medium'
         };
 
         const settings = {
             easy: { size: 8, squirrels: 10 },
             medium: { size: 12, squirrels: 30 },
-            hard: { size: 16, squirrels: 40 }
+            hard: { size: 16, squirrels: 40 },
+            custom: { width: 12, height: 12, squirrels: 30 }
         };
 
-        function initGame() {
-            const difficulty = document.getElementById('difficulty').value;
-            const { size, squirrels } = settings[difficulty];
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
 
-            gameState.gridSize = size;
+            // Remove active class from all tab buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Update game difficulty if not on how to play tab
+            if (tabName !== 'howtoplay') {
+                gameState.currentDifficulty = tabName;
+                resetGame();
+            }
+        }
+
+        function initGame() {
+            const difficulty = gameState.currentDifficulty;
+            let gridWidth, gridHeight, squirrels;
+
+            if (difficulty === 'custom') {
+                gridWidth = parseInt(document.getElementById('customWidth').value) || 12;
+                gridHeight = parseInt(document.getElementById('customHeight').value) || 12;
+                squirrels = parseInt(document.getElementById('customSquirrels').value) || 30;
+            } else {
+                const { size, squirrels: sq } = settings[difficulty];
+                gridWidth = size;
+                gridHeight = size;
+                squirrels = sq;
+            }
+
+            // Clamp values
+            gridWidth = Math.max(4, Math.min(100, gridWidth));
+            gridHeight = Math.max(4, Math.min(100, gridHeight));
+            const maxSquirrels = gridWidth * gridHeight - 9; // 9 protected cells minimum
+            squirrels = Math.max(1, Math.min(maxSquirrels, squirrels));
+
+            gameState.gridSize = gridWidth; // For backward compatibility
+            gameState.gridWidth = gridWidth;
+            gameState.gridHeight = gridHeight;
             gameState.squirrelCount = squirrels;
             gameState.board = [];
-            gameState.revealed = Array(size * size).fill(false);
-            gameState.flagged = Array(size * size).fill(false);
+            gameState.revealed = Array(gridWidth * gridHeight).fill(false);
+            gameState.flagged = Array(gridWidth * gridHeight).fill(false);
             gameState.gameOver = false;
             gameState.won = false;
             gameState.startTime = null;
@@ -341,11 +235,11 @@
 
             // Create grid
             const gridElement = document.getElementById('board');
-            gridElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridElement.style.gridTemplateColumns = `repeat(${gridWidth}, 1fr)`;
             gridElement.innerHTML = '';
 
             // Initialize board WITHOUT squirrels yet (will place on first click)
-            const totalCells = size * size;
+            const totalCells = gridWidth * gridHeight;
             for (let i = 0; i < totalCells; i++) {
                 gameState.board[i] = false;
             }
@@ -355,6 +249,28 @@
                 const cell = document.createElement('button');
                 cell.className = 'cell';
                 cell.dataset.index = i;
+                
+                const percentage = parseInt(document.getElementById('cellSizeSlider').value);
+                const baseSize = 40;
+                const cellSize = (baseSize * percentage) / 100;
+                const fontSize = Math.max(14, Math.floor(cellSize * 0.45));
+
+                cell.style.cssText = `
+                    width: ${cellSize}px;
+                    height: ${cellSize}px;
+                    padding: 0;
+                    border: 1px solid #ddd;
+                    background: white;
+                    cursor: pointer;
+                    border-radius: 4px;
+                    font-size: ${fontSize}px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.1s ease;
+                    font-weight: 600;
+                    user-select: none;
+                `;
 
                 cell.onmousedown = (e) => {
                     e.preventDefault();
@@ -372,9 +288,10 @@
 
         function placeSquirrels(safeIndex) {
             // Place squirrels after first click, avoiding the clicked cell and its neighbors
-            const size = gameState.gridSize;
-            const row = Math.floor(safeIndex / size);
-            const col = safeIndex % size;
+            const width = gameState.gridWidth;
+            const height = gameState.gridHeight;
+            const row = Math.floor(safeIndex / width);
+            const col = safeIndex % width;
             const protectedCells = new Set();
 
             // Mark the clicked cell and all neighbors as protected
@@ -382,15 +299,15 @@
                 for (let dc = -1; dc <= 1; dc++) {
                     const nr = row + dr;
                     const nc = col + dc;
-                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                        protectedCells.add(nr * size + nc);
+                    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                        protectedCells.add(nr * width + nc);
                     }
                 }
             }
 
             // Place squirrels randomly in non-protected cells
             let placed = 0;
-            const totalCells = size * size;
+            const totalCells = width * height;
             while (placed < gameState.squirrelCount) {
                 const idx = Math.floor(Math.random() * totalCells);
                 if (!gameState.board[idx] && !protectedCells.has(idx)) {
@@ -403,22 +320,26 @@
         function revealCell(idx) {
             if (gameState.gameOver || gameState.won || gameState.flagged[idx]) return;
 
-            const size = gameState.gridSize;
-            const row = Math.floor(idx / size);
-            const col = idx % size;
+            const width = gameState.gridWidth;
+            const height = gameState.gridHeight;
+            const row = Math.floor(idx / width);
+            const col = idx % width;
 
             // If cell is already revealed and is a number, try chord operation (if enabled)
             if (gameState.revealed[idx] && !gameState.board[idx] && gameState.chordEnabled) {
                 let squirrelCount = 0;
                 let flaggedCount = 0;
 
-                // Count adjacent squirrels and flags
+                // Count adjacent squirrels and flags (skip center cell)
                 for (let dr = -1; dr <= 1; dr++) {
                     for (let dc = -1; dc <= 1; dc++) {
+                        // Skip the center cell - only count neighbors
+                        if (dr === 0 && dc === 0) continue;
+                        
                         const nr = row + dr;
                         const nc = col + dc;
-                        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                            const nidx = nr * size + nc;
+                        if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                            const nidx = nr * width + nc;
                             if (gameState.board[nidx]) squirrelCount++;
                             if (gameState.flagged[nidx]) flaggedCount++;
                         }
@@ -429,10 +350,13 @@
                 if (squirrelCount > 0 && flaggedCount === squirrelCount) {
                     for (let dr = -1; dr <= 1; dr++) {
                         for (let dc = -1; dc <= 1; dc++) {
+                            // Skip the center cell
+                            if (dr === 0 && dc === 0) continue;
+                            
                             const nr = row + dr;
                             const nc = col + dc;
-                            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                                const nidx = nr * size + nc;
+                            if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                                const nidx = nr * width + nc;
                                 if (!gameState.revealed[nidx] && !gameState.flagged[nidx]) {
                                     revealCell(nidx);
                                 }
@@ -475,22 +399,28 @@
 
             for (let dr = -1; dr <= 1; dr++) {
                 for (let dc = -1; dc <= 1; dc++) {
+                    // Skip the center cell - only count neighbors
+                    if (dr === 0 && dc === 0) continue;
+                    
                     const nr = row + dr;
                     const nc = col + dc;
-                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                        if (gameState.board[nr * size + nc]) squirrelCount++;
+                    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                        if (gameState.board[nr * width + nc]) squirrelCount++;
                     }
                 }
             }
 
             if (squirrelCount === 0) {
-                // Flood fill for empty areas
+                // Flood fill for empty areas (skip center cell)
                 for (let dr = -1; dr <= 1; dr++) {
                     for (let dc = -1; dc <= 1; dc++) {
+                        // Skip the center cell
+                        if (dr === 0 && dc === 0) continue;
+                        
                         const nr = row + dr;
                         const nc = col + dc;
-                        const nidx = nr * size + nc;
-                        if (nr >= 0 && nr < size && nc >= 0 && nc < size && !gameState.revealed[nidx] && !gameState.flagged[nidx]) {
+                        const nidx = nr * width + nc;
+                        if (nr >= 0 && nr < height && nc >= 0 && nc < width && !gameState.revealed[nidx] && !gameState.flagged[nidx]) {
                             revealCell(nidx);
                         }
                     }
@@ -515,8 +445,9 @@
         }
 
         function checkWin() {
-            const size = gameState.gridSize;
-            const totalCells = size * size;
+            const width = gameState.gridWidth;
+            const height = gameState.gridHeight;
+            const totalCells = width * height;
             let revealedNonSquirrels = 0;
 
             for (let i = 0; i < totalCells; i++) {
@@ -535,13 +466,14 @@
         }
 
         function updateDisplay() {
-            const size = gameState.gridSize;
+            const width = gameState.gridWidth;
+            const height = gameState.gridHeight;
 
             for (let i = 0; i < gameState.board.length; i++) {
                 const cell = document.querySelector(`[data-index="${i}"]`);
 
                 if (gameState.flagged[i]) {
-                    cell.textContent = '🌰';
+                    cell.textContent = '🚩';
                     cell.classList.add('flagged', 'revealed');
                 } else if (gameState.revealed[i]) {
                     cell.classList.add('revealed');
@@ -549,16 +481,19 @@
                         cell.textContent = '🐿️';
                         cell.classList.add('squirrel');
                     } else {
-                        const row = Math.floor(i / size);
-                        const col = i % size;
+                        const row = Math.floor(i / width);
+                        const col = i % width;
                         let squirrelCount = 0;
 
                         for (let dr = -1; dr <= 1; dr++) {
                             for (let dc = -1; dc <= 1; dc++) {
+                                // Skip the center cell - only count neighbors
+                                if (dr === 0 && dc === 0) continue;
+                                
                                 const nr = row + dr;
                                 const nc = col + dc;
-                                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                                    if (gameState.board[nr * size + nc]) squirrelCount++;
+                                if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                                    if (gameState.board[nr * width + nc]) squirrelCount++;
                                 }
                             }
                         }
@@ -594,10 +529,49 @@
             initGame();
         }
 
-        document.getElementById('difficulty').addEventListener('change', resetGame);
+
+
+        function updateCustomStats() {
+            const width = parseInt(document.getElementById('customWidth').value) || 12;
+            const height = parseInt(document.getElementById('customHeight').value) || 12;
+            const squirrels = parseInt(document.getElementById('customSquirrels').value) || 30;
+            const totalCells = width * height;
+            const percentage = Math.round((squirrels / totalCells) * 100);
+            document.getElementById('customStats').textContent = `Grid: ${width}×${height} (${totalCells} cells) • Squirrels: ${squirrels} (${percentage}% of board)`;
+        }
+
+        document.getElementById('customWidth').addEventListener('input', () => {
+            updateCustomStats();
+            resetGame();
+        });
+        document.getElementById('customHeight').addEventListener('input', () => {
+            updateCustomStats();
+            resetGame();
+        });
+        document.getElementById('customSquirrels').addEventListener('input', () => {
+            updateCustomStats();
+            resetGame();
+        });
         document.getElementById('chordToggle').addEventListener('change', (e) => {
             gameState.chordEnabled = e.target.checked;
         });
+
+        document.getElementById('cellSizeSlider').addEventListener('input', (e) => {
+            const percentage = e.target.value;
+            document.getElementById('cellSizeValue').textContent = percentage + '%';
+            updateCellSize(percentage);
+        });
+
+        function updateCellSize(percentage) {
+            const baseSize = 40; // Base size in pixels
+            const actualSize = (baseSize * percentage) / 100;
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.style.width = actualSize + 'px';
+                cell.style.height = actualSize + 'px';
+                cell.style.fontSize = Math.max(14, Math.floor(actualSize * 0.45)) + 'px';
+            });
+        }
 
         // Initialize game on load
         initGame();
