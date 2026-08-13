@@ -219,6 +219,15 @@
             margin: 0.25rem 0;
         }
 
+        #chordToggle {
+            cursor: pointer;
+            accent-color: #2d5016;
+        }
+
+        label[for="chordToggle"] {
+            user-select: none;
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 2rem;
@@ -266,6 +275,10 @@
                     <div class="stat-value" id="flagCount">0/10</div>
                 </div>
             </div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
+                <input type="checkbox" id="chordToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="chordToggle" style="cursor: pointer; flex: 1; color: #333; font-size: 0.95rem; margin: 0;">Enable chord opening (click numbers to reveal safe cells)</label>
+            </div>
             <button onclick="resetGame()">New Game</button>
         </div>
 
@@ -280,6 +293,7 @@
             <p><strong>Left-click</strong> to reveal a cell</p>
             <p><strong>Right-click</strong> to place a flag</p>
             <p>Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #1b5e20;"><strong>Chord feature:</strong> When enabled, left-click a number with all surrounding squirrels flagged to auto-reveal safe cells around it.</p>
         </div>
 
         <div class="footer">
@@ -298,7 +312,8 @@
             timerInterval: null,
             gridSize: 12,
             squirrelCount: 30,
-            firstClick: true
+            firstClick: true,
+            chordEnabled: true
         };
 
         const settings = {
@@ -320,6 +335,7 @@
             gameState.won = false;
             gameState.startTime = null;
             gameState.firstClick = true;
+            gameState.chordEnabled = document.getElementById('chordToggle').checked;
 
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 
@@ -391,8 +407,8 @@
             const row = Math.floor(idx / size);
             const col = idx % size;
 
-            // If cell is already revealed and is a number, try chord operation
-            if (gameState.revealed[idx] && !gameState.board[idx]) {
+            // If cell is already revealed and is a number, try chord operation (if enabled)
+            if (gameState.revealed[idx] && !gameState.board[idx] && gameState.chordEnabled) {
                 let squirrelCount = 0;
                 let flaggedCount = 0;
 
@@ -574,10 +590,14 @@
             document.getElementById('timer').textContent = '0:00';
             document.getElementById('gameStatus').textContent = '';
             document.getElementById('gameStatus').className = 'status';
+            gameState.chordEnabled = document.getElementById('chordToggle').checked;
             initGame();
         }
 
         document.getElementById('difficulty').addEventListener('change', resetGame);
+        document.getElementById('chordToggle').addEventListener('change', (e) => {
+            gameState.chordEnabled = e.target.checked;
+        });
 
         // Initialize game on load
         initGame();
