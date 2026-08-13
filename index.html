@@ -18,6 +18,7 @@
             <button class="tab-button" onclick="switchTab('medium')">Medium</button>
             <button class="tab-button" onclick="switchTab('hard')">Hard</button>
             <button class="tab-button" onclick="switchTab('custom')">Custom</button>
+            <button class="tab-button" onclick="switchTab('settings')">⚙️ Settings</button>
             <button class="tab-button" onclick="switchTab('howtoplay')">❓ How to Play</button>
         </div>
 
@@ -85,6 +86,64 @@
             </div>
         </div>
 
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="controls">
+                <h3 style="color: #2d5016; margin-top: 0; text-align: center;">Touch Settings</h3>
+
+                <!-- Long Press Duration -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="longPressDuration" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">
+                        Long Press Threshold: <span id="longPressDurationValue">500</span>ms
+                    </label>
+                    <input type="range" id="longPressDuration" min="100" max="500" value="500" step="50" style="width: 100%; cursor: pointer;">
+                    <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0 0 0;">Adjust how long you need to hold to flag a cell</p>
+                </div>
+
+                <!-- Long Press Vibration -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="longPressVibration" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">
+                        Flag Vibration: <span id="longPressVibrationValue">50</span>ms
+                    </label>
+                    <input type="range" id="longPressVibration" min="0" max="200" value="50" step="10" style="width: 100%; cursor: pointer;">
+                    <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0 0 0;">Vibration feedback when you flag a cell (0 = no vibration)</p>
+                </div>
+
+                <!-- Quick Tap Vibration -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="quickTapVibration" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333;">
+                        Reveal Vibration: <span id="quickTapVibrationValue">30</span>ms
+                    </label>
+                    <input type="range" id="quickTapVibration" min="0" max="200" value="30" step="10" style="width: 100%; cursor: pointer;">
+                    <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0 0 0;">Vibration feedback when you reveal a cell (0 = no vibration)</p>
+                </div>
+
+                <!-- Inverted Mode Toggle -->
+                <div style="margin-bottom: 1.5rem; background: #f5f5f5; padding: 1rem; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                        <input type="checkbox" id="invertedMode" style="width: 18px; height: 18px; cursor: pointer;">
+                        <div>
+                            <div style="font-weight: 600; color: #333;">Invert Touch Actions</div>
+                            <div style="font-size: 0.8rem; color: #999;">Quick tap = flag • Long press = reveal</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Vibration Test Button -->
+                <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; border: 1px solid #c8e6c9; margin-bottom: 1rem;">
+                    <button onclick="testVibration()" style="width: 100%; background: #2d5016; color: white; padding: 0.75rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🔊 Test Vibration
+                    </button>
+                    <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0 0 0; text-align: center;">Tap to test current vibration settings</p>
+                </div>
+
+                <!-- Info -->
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; border: 1px solid #ffc107; font-size: 0.85rem; color: #856404;">
+                    <strong>💡 Note:</strong> Vibration only works on devices that support it (most phones and modern tablets). Your settings are saved automatically.
+                </div>
+            </div>
+        </div>
+
         <!-- How to Play Tab -->
         <div id="howtoplay" class="tab-content">
             <div style="background: #e8f5e9; padding: 1.5rem; border-radius: 12px; font-size: 0.9rem; color: #2d5016; border-left: 4px solid #2d5016;">
@@ -96,8 +155,9 @@
                 
                 <h4 style="margin: 1rem 0 0.5rem 0;">Mobile/Tablet Controls</h4>
                 <p><strong>Tap</strong> (quick) to reveal a cell</p>
-                <p><strong>Long press</strong> (hold 0.5 seconds) to place a flag</p>
+                <p><strong>Long press</strong> (hold) to place a flag</p>
                 <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0;">You'll see the cell highlight while holding</p>
+                <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0;"><strong>Customize in Settings:</strong> Adjust hold time, vibration, or invert touch actions</p>
                 
                 <p style="margin-top: 1rem;">Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
                 
@@ -172,7 +232,14 @@
             firstClick: true,
             chordEnabled: true,
             currentDifficulty: 'medium',
-            cellCache: {} // Cache DOM elements for faster access
+            cellCache: {}, // Cache DOM elements for faster access
+            // Touch settings
+            touchSettings: {
+                longPressDuration: 500,      // 100-500ms
+                longPressVibration: 50,      // 0-200ms
+                quickTapVibration: 30,       // 0-200ms
+                invertedMode: false           // Quick = flag, Long = reveal
+            }
         };
 
         const settings = {
@@ -204,11 +271,56 @@
             // Add active class to clicked button
             event.target.classList.add('active');
 
-            // Update game difficulty if not on how to play tab
-            if (tabName !== 'howtoplay') {
+            // Update game difficulty if not on settings or how to play tab
+            if (tabName !== 'howtoplay' && tabName !== 'settings') {
                 gameState.currentDifficulty = tabName;
                 resetGame();
             }
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('squirrelSweepSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    gameState.touchSettings = { ...gameState.touchSettings, ...settings };
+                } catch (e) {
+                    console.log('Failed to load settings');
+                }
+            }
+            updateSettingsUI();
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('squirrelSweepSettings', JSON.stringify(gameState.touchSettings));
+        }
+
+        // Update UI to reflect current settings
+        function updateSettingsUI() {
+            document.getElementById('longPressDuration').value = gameState.touchSettings.longPressDuration;
+            document.getElementById('longPressDurationValue').textContent = gameState.touchSettings.longPressDuration;
+            
+            document.getElementById('longPressVibration').value = gameState.touchSettings.longPressVibration;
+            document.getElementById('longPressVibrationValue').textContent = gameState.touchSettings.longPressVibration;
+            
+            document.getElementById('quickTapVibration').value = gameState.touchSettings.quickTapVibration;
+            document.getElementById('quickTapVibrationValue').textContent = gameState.touchSettings.quickTapVibration;
+            
+            document.getElementById('invertedMode').checked = gameState.touchSettings.invertedMode;
+        }
+
+        // Vibration helper
+        function vibrate(duration) {
+            if (duration > 0 && navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
+        }
+
+        // Test vibration
+        function testVibration() {
+            vibrate(gameState.touchSettings.longPressVibration);
         }
 
         function initGame() {
@@ -356,14 +468,30 @@
 
             const idx = parseInt(touchStartTarget.dataset.index);
             const touchDuration = Date.now() - touchStartTime;
-
-            // Long press (> 100ms) = flag
-            if (touchDuration > 100) {
-                toggleFlag(idx);
-            } 
-            // Short tap = reveal
-            else {
-                revealCell(idx);
+            const threshold = gameState.touchSettings.longPressDuration;
+            
+            // Determine if it's a long press or short tap
+            const isLongPress = touchDuration > threshold;
+            
+            // Handle action based on inversion setting
+            if (gameState.touchSettings.invertedMode) {
+                // Inverted mode: quick tap = flag, long press = reveal
+                if (isLongPress) {
+                    revealCell(idx);
+                    vibrate(gameState.touchSettings.quickTapVibration);
+                } else {
+                    toggleFlag(idx);
+                    vibrate(gameState.touchSettings.longPressVibration);
+                }
+            } else {
+                // Normal mode: quick tap = reveal, long press = flag
+                if (isLongPress) {
+                    toggleFlag(idx);
+                    vibrate(gameState.touchSettings.longPressVibration);
+                } else {
+                    revealCell(idx);
+                    vibrate(gameState.touchSettings.quickTapVibration);
+                }
             }
         }
 
@@ -686,7 +814,32 @@
             });
         }
 
+        // Settings event listeners
+        document.getElementById('longPressDuration').addEventListener('input', (e) => {
+            gameState.touchSettings.longPressDuration = parseInt(e.target.value);
+            document.getElementById('longPressDurationValue').textContent = gameState.touchSettings.longPressDuration;
+            saveSettings();
+        });
+
+        document.getElementById('longPressVibration').addEventListener('input', (e) => {
+            gameState.touchSettings.longPressVibration = parseInt(e.target.value);
+            document.getElementById('longPressVibrationValue').textContent = gameState.touchSettings.longPressVibration;
+            saveSettings();
+        });
+
+        document.getElementById('quickTapVibration').addEventListener('input', (e) => {
+            gameState.touchSettings.quickTapVibration = parseInt(e.target.value);
+            document.getElementById('quickTapVibrationValue').textContent = gameState.touchSettings.quickTapVibration;
+            saveSettings();
+        });
+
+        document.getElementById('invertedMode').addEventListener('change', (e) => {
+            gameState.touchSettings.invertedMode = e.target.checked;
+            saveSettings();
+        });
+
         // Initialize game on load
+        loadSettings();
         initGame();
     </script>
 </body>
