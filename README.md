@@ -31,11 +31,11 @@ A fun, forest-themed minesweeper game where you find acorns and avoid squirrels!
 
 ### Method 1: Using GitHub Pages (Recommended)
 
-1. **Create a new repository** on GitHub called `squirrel-sweep` (or any name)
+1. **Create a new repository** on GitHub called `squirrelsweeper` (or any name)
 
 2. **Clone the repository** to your computer:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/squirrel-sweep.git
+   git clone https://github.com/YOUR-USERNAME/squirrelsweeper.git
    cd squirrel-sweep
    ```
 
