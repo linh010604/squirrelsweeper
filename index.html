@@ -89,9 +89,17 @@
         <div id="howtoplay" class="tab-content">
             <div style="background: #e8f5e9; padding: 1.5rem; border-radius: 12px; font-size: 0.9rem; color: #2d5016; border-left: 4px solid #2d5016;">
                 <h3 style="margin-top: 0; margin-bottom: 1rem;">How to Play</h3>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0;">Desktop Controls</h4>
                 <p><strong>Left-click</strong> to reveal a cell</p>
                 <p><strong>Right-click</strong> to place a flag</p>
-                <p>Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0;">Mobile/Tablet Controls</h4>
+                <p><strong>Tap</strong> (quick) to reveal a cell</p>
+                <p><strong>Long press</strong> (hold 0.5 seconds) to place a flag</p>
+                <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0;">You'll see the cell highlight while holding</p>
+                
+                <p style="margin-top: 1rem;">Numbers show how many squirrels are nearby. Reveal all safe cells to win!</p>
                 
                 <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Features</h3>
                 <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Chord opening:</strong> When enabled, left-click a number with all surrounding squirrels flagged to auto-reveal safe cells around it.</p>
@@ -144,7 +152,7 @@
         </div>
 
         <div class="footer">
-            <p>Made with 🌰 by Squirrel Sweep • <a href="https://github.com" style="color: #2d5016; text-decoration: none;">View on GitHub</a></p>
+            <p>Made with 🌰 by Squirrel Sweep 1.thang6 • <a href="https://github.com" style="color: #2d5016; text-decoration: none;">View on GitHub</a></p>
         </div>
     </div>
 
@@ -295,6 +303,14 @@
             // Add new event delegation listener and store reference to remove later
             gridElement._mouseDownListener = handleBoardClick;
             gridElement.addEventListener('mousedown', handleBoardClick);
+            
+            // Add touch support for mobile/tablet
+            gridElement.addEventListener('touchstart', handleTouchStart, false);
+            gridElement.addEventListener('touchend', handleTouchEnd, false);
+            gridElement.addEventListener('touchcancel', handleTouchCancel, false);
+            
+            // Prevent default touch behaviors (zoom, scroll)
+            gridElement.style.touchAction = 'manipulation';
         }
 
         function handleBoardClick(e) {
@@ -305,6 +321,59 @@
             const idx = parseInt(cell.dataset.index);
             if (e.button === 0) revealCell(idx);
             if (e.button === 2) toggleFlag(idx);
+        }
+
+        // Touch support for mobile/tablet
+        let touchStartTime = 0;
+        let touchStartTarget = null;
+        let touchIdentifier = null;
+
+        function handleTouchStart(e) {
+            const touch = e.touches[0];
+            touchStartTime = Date.now();
+            touchStartTarget = touch.target.closest('.cell');
+            touchIdentifier = touch.identifier;
+            
+            if (touchStartTarget) {
+                touchStartTarget.classList.add('touch-active');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchStartTarget) return;
+            
+            const touch = Array.from(e.changedTouches).find(t => t.identifier === touchIdentifier);
+            if (!touch) return;
+
+            touchStartTarget.classList.remove('touch-active');
+            
+            const endTarget = touch.target.closest('.cell');
+            
+            // Only process if touch ended on the same cell it started on
+            if (endTarget !== touchStartTarget) {
+                return;
+            }
+
+            const idx = parseInt(touchStartTarget.dataset.index);
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Long press (> 500ms) = flag
+            if (touchDuration > 500) {
+                toggleFlag(idx);
+            } 
+            // Short tap = reveal
+            else {
+                revealCell(idx);
+            }
+        }
+
+        function handleTouchCancel(e) {
+            if (touchStartTarget) {
+                touchStartTarget.classList.remove('touch-active');
+            }
+            touchStartTarget = null;
+            touchStartTime = 0;
+            touchIdentifier = null;
         }
 
         // Prevent context menu on right-click
@@ -500,7 +569,7 @@
                 if (!cell) continue;
 
                 if (gameState.flagged[i]) {
-                    cell.textContent = '🚩';
+                    cell.textContent = '🌰';
                     cell.classList.add('flagged', 'revealed');
                     cell.style.background = '#fff3cd';
                     cell.style.color = '#856404';

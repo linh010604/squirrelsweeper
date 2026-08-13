@@ -216,6 +216,25 @@ button:active {
     box-shadow: 0 2px 4px rgba(45, 80, 22, 0.2);
 }
 
+/* Touch feedback */
+.cell.touch-active {
+    background: #d4e8d4 !important;
+    transform: scale(0.95);
+}
+
+/* Disable tap highlight on iOS */
+.cell {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Better touch target size (minimum 44x44px) */
+@media (max-width: 768px) {
+    .cell {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
 .cell.revealed {
     cursor: default;
     background: #e8e8e8;
@@ -307,6 +326,8 @@ input[type="number"]:focus {
         width: 36px;
         height: 36px;
         font-size: 16px;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     .controls-grid {
@@ -325,5 +346,13 @@ input[type="number"]:focus {
 
     .tab-button:nth-child(5) {
         flex: 1 1 100%;
+    }
+    
+    .board-container {
+        padding: 1rem;
+    }
+    
+    #board {
+        gap: 4px;
     }
 }
