@@ -205,6 +205,11 @@ button:active {
     user-select: none;
 }
 
+/* Disable transitions for large grids */
+.cell.no-transition {
+    transition: none;
+}
+
 .cell:hover:not(.revealed) {
     background: #f0f0f0;
     border-color: #2d5016;

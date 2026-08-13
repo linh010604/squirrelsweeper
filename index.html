@@ -64,16 +64,16 @@
                 <div style="background: #f0f0f0; padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #ddd;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                         <div>
-                            <label for="customWidth" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Width</label>
-                            <input type="number" id="customWidth" min="4" max="100" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <label for="customWidth" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Width (Max 50)</label>
+                            <input type="number" id="customWidth" min="4" max="50" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                         <div>
-                            <label for="customHeight" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Height</label>
-                            <input type="number" id="customHeight" min="4" max="100" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <label for="customHeight" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Grid Height (Max 50)</label>
+                            <input type="number" id="customHeight" min="4" max="50" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                         <div>
                             <label for="customSquirrels" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Squirrels (Max 30%)</label>
-                            <input type="number" id="customSquirrels" min="1" max="2480" value="30" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="number" id="customSquirrels" min="1" max="399" value="30" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                     </div>
                     <div style="font-size: 0.8rem; color: #999;">
@@ -101,7 +101,12 @@
                 <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Easy:</strong> 8×8 grid with 10 squirrels</p>
                 <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Medium:</strong> 12×12 grid with 30 squirrels</p>
                 <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Hard:</strong> 16×16 grid with 40 squirrels</p>
-                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Custom:</strong> Create your own board size and squirrel count</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;"><strong>Custom:</strong> Create your own board size and squirrel count (up to 50×50)</p>
+
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Performance Tips</h3>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;">• For best performance, keep grids under 30×30 (900 cells)</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;">• Large grids (30×30+) automatically disable animations for smoother gameplay</p>
+                <p style="margin: 0.5rem 0; font-size: 0.85rem;">• Maximum grid size is 50×50 (2,500 cells) with squirrels capped at 30% of the board</p>
             </div>
         </div>
 
@@ -158,7 +163,8 @@
             squirrelCount: 30,
             firstClick: true,
             chordEnabled: true,
-            currentDifficulty: 'medium'
+            currentDifficulty: 'medium',
+            cellCache: {} // Cache DOM elements for faster access
         };
 
         const settings = {
@@ -213,15 +219,10 @@
             }
 
             // Clamp values
-            gridWidth = Math.max(4, Math.min(100, gridWidth));
-            gridHeight = Math.max(4, Math.min(100, gridHeight));
+            gridWidth = Math.max(4, Math.min(50, gridWidth));
+            gridHeight = Math.max(4, Math.min(50, gridHeight));
             const maxSquirrels = Math.floor(gridWidth * gridHeight * 0.3); // 30% max
             squirrels = Math.max(1, Math.min(maxSquirrels, squirrels));
-
-            // Update custom inputs to reflect clamped values
-            document.getElementById('customWidth').value = gridWidth;
-            document.getElementById('customHeight').value = gridHeight;
-            document.getElementById('customSquirrels').value = squirrels;
 
             gameState.gridSize = gridWidth; // For backward compatibility
             gameState.gridWidth = gridWidth;
@@ -230,6 +231,7 @@
             gameState.board = [];
             gameState.revealed = Array(gridWidth * gridHeight).fill(false);
             gameState.flagged = Array(gridWidth * gridHeight).fill(false);
+            gameState.cellCache = {}; // Clear cache for new game
             gameState.gameOver = false;
             gameState.won = false;
             gameState.startTime = null;
@@ -243,6 +245,12 @@
             gridElement.style.gridTemplateColumns = `repeat(${gridWidth}, 1fr)`;
             gridElement.innerHTML = '';
 
+            // Remove old event listener before adding new one
+            const oldListener = gridElement._mouseDownListener;
+            if (oldListener) {
+                gridElement.removeEventListener('mousedown', oldListener);
+            }
+
             // Initialize board WITHOUT squirrels yet (will place on first click)
             const totalCells = gridWidth * gridHeight;
             for (let i = 0; i < totalCells; i++) {
@@ -250,9 +258,12 @@
             }
 
             // Create cells
+            const isLargeGrid = totalCells > 1000; // Disable transitions for grids larger than 1000 cells
+            
             for (let i = 0; i < totalCells; i++) {
                 const cell = document.createElement('button');
                 cell.className = 'cell';
+                if (isLargeGrid) cell.classList.add('no-transition');
                 cell.dataset.index = i;
                 
                 const percentage = parseInt(document.getElementById('cellSizeSlider').value);
@@ -277,19 +288,29 @@
                     user-select: none;
                 `;
 
-                cell.onmousedown = (e) => {
-                    e.preventDefault();
-                    if (e.button === 0) revealCell(i);
-                    if (e.button === 2) toggleFlag(i);
-                };
-
-                cell.oncontextmenu = (e) => e.preventDefault();
-
                 gridElement.appendChild(cell);
+                gameState.cellCache[i] = cell; // Cache cell reference
             }
 
-            updateDisplay();
+            // Add new event delegation listener and store reference to remove later
+            gridElement._mouseDownListener = handleBoardClick;
+            gridElement.addEventListener('mousedown', handleBoardClick);
         }
+
+        function handleBoardClick(e) {
+            e.preventDefault();
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            
+            const idx = parseInt(cell.dataset.index);
+            if (e.button === 0) revealCell(idx);
+            if (e.button === 2) toggleFlag(idx);
+        }
+
+        // Prevent context menu on right-click
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.cell')) e.preventDefault();
+        });
 
         function placeSquirrels(safeIndex) {
             // Place squirrels after first click, avoiding the clicked cell and its neighbors
@@ -475,7 +496,8 @@
             const height = gameState.gridHeight;
 
             for (let i = 0; i < gameState.board.length; i++) {
-                const cell = document.querySelector(`[data-index="${i}"]`);
+                const cell = gameState.cellCache[i]; // Use cached reference instead of querySelector
+                if (!cell) continue;
 
                 if (gameState.flagged[i]) {
                     cell.textContent = '🚩';
@@ -497,7 +519,6 @@
 
                         for (let dr = -1; dr <= 1; dr++) {
                             for (let dc = -1; dc <= 1; dc++) {
-                                // Skip the center cell - only count neighbors
                                 if (dr === 0 && dc === 0) continue;
                                 
                                 const nr = row + dr;
@@ -584,13 +605,15 @@
         });
 
         function updateCellSize(percentage) {
-            const baseSize = 40; // Base size in pixels
+            const baseSize = 40;
             const actualSize = (baseSize * percentage) / 100;
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
+            const fontSize = Math.max(14, Math.floor(actualSize * 0.45));
+
+            // Use cached elements instead of querySelectorAll
+            Object.values(gameState.cellCache).forEach(cell => {
                 cell.style.width = actualSize + 'px';
                 cell.style.height = actualSize + 'px';
-                cell.style.fontSize = Math.max(14, Math.floor(actualSize * 0.45)) + 'px';
+                cell.style.fontSize = fontSize + 'px';
             });
         }
 
