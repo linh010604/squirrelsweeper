@@ -356,9 +356,9 @@
 
             const idx = parseInt(touchStartTarget.dataset.index);
             const touchDuration = Date.now() - touchStartTime;
-            
-            // Long press (> 500ms) = flag
-            if (touchDuration > 500) {
+
+            // Long press (> 100ms) = flag
+            if (touchDuration > 100) {
                 toggleFlag(idx);
             } 
             // Short tap = reveal
