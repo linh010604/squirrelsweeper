@@ -72,7 +72,7 @@
                             <input type="number" id="customHeight" min="4" max="100" value="12" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                         <div>
-                            <label for="customSquirrels" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Squirrels</label>
+                            <label for="customSquirrels" style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 4px; font-weight: 600;">Squirrels (Max 30%)</label>
                             <input type="number" id="customSquirrels" min="1" max="2480" value="30" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
                         </div>
                     </div>
@@ -215,8 +215,13 @@
             // Clamp values
             gridWidth = Math.max(4, Math.min(100, gridWidth));
             gridHeight = Math.max(4, Math.min(100, gridHeight));
-            const maxSquirrels = gridWidth * gridHeight - 9; // 9 protected cells minimum
+            const maxSquirrels = Math.floor(gridWidth * gridHeight * 0.3); // 30% max
             squirrels = Math.max(1, Math.min(maxSquirrels, squirrels));
+
+            // Update custom inputs to reflect clamped values
+            document.getElementById('customWidth').value = gridWidth;
+            document.getElementById('customHeight').value = gridHeight;
+            document.getElementById('customSquirrels').value = squirrels;
 
             gameState.gridSize = gridWidth; // For backward compatibility
             gameState.gridWidth = gridWidth;
@@ -475,11 +480,16 @@
                 if (gameState.flagged[i]) {
                     cell.textContent = '🚩';
                     cell.classList.add('flagged', 'revealed');
+                    cell.style.background = '#fff3cd';
+                    cell.style.color = '#856404';
                 } else if (gameState.revealed[i]) {
                     cell.classList.add('revealed');
+                    cell.style.background = '#e8e8e8';
+                    cell.style.borderColor = '#ccc';
                     if (gameState.board[i]) {
                         cell.textContent = '🐿️';
                         cell.classList.add('squirrel');
+                        cell.style.background = '#ffcdd2';
                     } else {
                         const row = Math.floor(i / width);
                         const col = i % width;
@@ -505,6 +515,9 @@
                 } else {
                     cell.textContent = '';
                     cell.classList.remove('flagged', 'revealed', 'squirrel', 'safe');
+                    cell.style.background = 'white';
+                    cell.style.borderColor = '#ddd';
+                    cell.style.color = 'inherit';
                 }
             }
 
@@ -534,8 +547,16 @@
         function updateCustomStats() {
             const width = parseInt(document.getElementById('customWidth').value) || 12;
             const height = parseInt(document.getElementById('customHeight').value) || 12;
-            const squirrels = parseInt(document.getElementById('customSquirrels').value) || 30;
+            let squirrels = parseInt(document.getElementById('customSquirrels').value) || 30;
             const totalCells = width * height;
+            const maxSquirrels = Math.floor(totalCells * 0.3); // 30% max
+
+            // Cap squirrels at 30% of board
+            if (squirrels > maxSquirrels) {
+                squirrels = maxSquirrels;
+                document.getElementById('customSquirrels').value = maxSquirrels;
+            }
+
             const percentage = Math.round((squirrels / totalCells) * 100);
             document.getElementById('customStats').textContent = `Grid: ${width}×${height} (${totalCells} cells) • Squirrels: ${squirrels} (${percentage}% of board)`;
         }
