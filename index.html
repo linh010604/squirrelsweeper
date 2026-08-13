@@ -385,7 +385,50 @@
         }
 
         function revealCell(idx) {
-            if (gameState.gameOver || gameState.won || gameState.flagged[idx] || gameState.revealed[idx]) return;
+            if (gameState.gameOver || gameState.won || gameState.flagged[idx]) return;
+
+            const size = gameState.gridSize;
+            const row = Math.floor(idx / size);
+            const col = idx % size;
+
+            // If cell is already revealed and is a number, try chord operation
+            if (gameState.revealed[idx] && !gameState.board[idx]) {
+                let squirrelCount = 0;
+                let flaggedCount = 0;
+
+                // Count adjacent squirrels and flags
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const nr = row + dr;
+                        const nc = col + dc;
+                        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                            const nidx = nr * size + nc;
+                            if (gameState.board[nidx]) squirrelCount++;
+                            if (gameState.flagged[nidx]) flaggedCount++;
+                        }
+                    }
+                }
+
+                // If all squirrels are flagged, reveal remaining cells
+                if (squirrelCount > 0 && flaggedCount === squirrelCount) {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const nr = row + dr;
+                            const nc = col + dc;
+                            if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                const nidx = nr * size + nc;
+                                if (!gameState.revealed[nidx] && !gameState.flagged[nidx]) {
+                                    revealCell(nidx);
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Normal cell reveal
+            if (gameState.revealed[idx]) return;
 
             // Place squirrels on first click, avoiding this cell and neighbors
             if (gameState.firstClick) {
@@ -412,9 +455,6 @@
             }
 
             // Count adjacent squirrels
-            const size = gameState.gridSize;
-            const row = Math.floor(idx / size);
-            const col = idx % size;
             let squirrelCount = 0;
 
             for (let dr = -1; dr <= 1; dr++) {
