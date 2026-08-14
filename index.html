@@ -138,7 +138,7 @@
                 </div>
 
                 <!-- Info -->
-                <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; border: 1px solid #ffc107; font-size: 0.85rem; color: #856404;">
+                <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; border: 1px solid #c8e6c9; font-size: 0.85rem; color: #2d5016;">
                     <strong>💡 Note:</strong> Vibration only works on devices that support it (most phones and modern tablets). Your settings are saved automatically.
                 </div>
             </div>
@@ -151,10 +151,12 @@
                 
                 <h4 style="margin: 1rem 0 0.5rem 0;">Desktop Controls</h4>
                 <p><strong>Left-click</strong> to reveal a cell</p>
-                <p><strong>Right-click</strong> to place a flag</p>
+                <p><strong>Left-click flagged cell</strong> to unflag it</p>
+                <p><strong>Right-click</strong> to toggle flag</p>
                 
                 <h4 style="margin: 1rem 0 0.5rem 0;">Mobile/Tablet Controls</h4>
                 <p><strong>Tap</strong> (quick) to reveal a cell</p>
+                <p><strong>Tap flagged cell</strong> to unflag it</p>
                 <p><strong>Long press</strong> (hold) to place a flag</p>
                 <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0;">You'll see the cell highlight while holding</p>
                 <p style="font-size: 0.8rem; color: #999; margin: 0.5rem 0;"><strong>Customize in Settings:</strong> Adjust hold time, vibration, or invert touch actions</p>
@@ -320,7 +322,13 @@
 
         // Test vibration
         function testVibration() {
-            vibrate(gameState.touchSettings.longPressVibration);
+            // Pattern: 3 quick pulses to make sure user feels it
+            if (navigator.vibrate) {
+                // iOS haptics pattern
+                navigator.vibrate([50, 50, 50, 50, 50]); // 5 vibrations
+            } else {
+                alert('❌ Vibration not supported on this device.\n\nMake sure:\n✓ Not in Silent mode (check physical switch)\n✓ Haptics enabled in Settings\n✓ Using HTTPS (some browsers require it)');
+            }
         }
 
         function initGame() {
@@ -425,14 +433,35 @@
             gridElement.style.touchAction = 'manipulation';
         }
 
+        // Track last touch time to prevent mouse handlers firing after touch
+        let lastTouchTime = 0;
+
         function handleBoardClick(e) {
+            // Ignore mouse clicks that are simulated from touch events
+            if (Date.now() - lastTouchTime < 150) {
+                return;
+            }
+
             e.preventDefault();
             const cell = e.target.closest('.cell');
             if (!cell) return;
             
             const idx = parseInt(cell.dataset.index);
-            if (e.button === 0) revealCell(idx);
-            if (e.button === 2) toggleFlag(idx);
+            
+            // Left-click
+            if (e.button === 0) {
+                // If flagged, unflag it
+                if (gameState.flagged[idx]) {
+                    toggleFlag(idx);
+                } else {
+                    revealCell(idx);
+                }
+            }
+            
+            // Right-click - always toggle flag
+            if (e.button === 2) {
+                toggleFlag(idx);
+            }
         }
 
         // Touch support for mobile/tablet
@@ -458,6 +487,7 @@
             if (!touch) return;
 
             touchStartTarget.classList.remove('touch-active');
+            lastTouchTime = Date.now(); // Record touch time to prevent simulated click
             
             const endTarget = touch.target.closest('.cell');
             
@@ -472,25 +502,40 @@
             
             // Determine if it's a long press or short tap
             const isLongPress = touchDuration > threshold;
+            const isFlagged = gameState.flagged[idx];
             
             // Handle action based on inversion setting
             if (gameState.touchSettings.invertedMode) {
                 // Inverted mode: quick tap = flag, long press = reveal
                 if (isLongPress) {
-                    revealCell(idx);
-                    vibrate(gameState.touchSettings.quickTapVibration);
+                    // Long press in inverted mode: reveal (or unflag if flagged)
+                    if (isFlagged) {
+                        toggleFlag(idx);
+                        vibrate(gameState.touchSettings.longPressVibration);
+                    } else {
+                        revealCell(idx);
+                        vibrate(gameState.touchSettings.longPressVibration);
+                    }
                 } else {
+                    // Quick tap in inverted mode: always just toggle flag
                     toggleFlag(idx);
-                    vibrate(gameState.touchSettings.longPressVibration);
+                    vibrate(gameState.touchSettings.quickTapVibration);
                 }
             } else {
                 // Normal mode: quick tap = reveal, long press = flag
                 if (isLongPress) {
+                    // Long press in normal mode: always just toggle flag
                     toggleFlag(idx);
                     vibrate(gameState.touchSettings.longPressVibration);
                 } else {
-                    revealCell(idx);
-                    vibrate(gameState.touchSettings.quickTapVibration);
+                    // Quick tap in normal mode: reveal (or unflag if flagged)
+                    if (isFlagged) {
+                        toggleFlag(idx);
+                        vibrate(gameState.touchSettings.quickTapVibration);
+                    } else {
+                        revealCell(idx);
+                        vibrate(gameState.touchSettings.quickTapVibration);
+                    }
                 }
             }
         }
