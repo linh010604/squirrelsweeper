@@ -506,36 +506,37 @@
             
             // Handle action based on inversion setting
             if (gameState.touchSettings.invertedMode) {
-                // Inverted mode: quick tap = flag, long press = reveal
+                // Inverted mode: quick tap = flag, long press = reveal/chord
                 if (isLongPress) {
-                    // Long press in inverted mode: reveal (or unflag if flagged)
+                    // Long press: reveal (handles chord opening automatically in revealCell)
+                    // But first unflag if it's flagged
                     if (isFlagged) {
                         toggleFlag(idx);
-                        vibrate(gameState.touchSettings.longPressVibration);
-                    } else {
-                        revealCell(idx);
-                        vibrate(gameState.touchSettings.longPressVibration);
-                    }
+                    // } else {
+                    //     revealCell(idx);  // This handles chord opening too
+                    // }
+                    vibrate(gameState.touchSettings.longPressVibration);
                 } else {
-                    // Quick tap in inverted mode: always just toggle flag
+                    // Quick tap: always toggle flag
                     toggleFlag(idx);
+                    revealCell(idx);  // Reveal if not flagged
                     vibrate(gameState.touchSettings.quickTapVibration);
                 }
             } else {
-                // Normal mode: quick tap = reveal, long press = flag
+                // Normal mode: quick tap = reveal/unflag/chord, long press = flag
                 if (isLongPress) {
-                    // Long press in normal mode: always just toggle flag
+                    // Long press: always toggle flag
                     toggleFlag(idx);
                     vibrate(gameState.touchSettings.longPressVibration);
                 } else {
-                    // Quick tap in normal mode: reveal (or unflag if flagged)
+                    // Quick tap: reveal (handles unflagging and chord opening)
+                    // If flagged, unflag it; if unrevealed, reveal it; if revealed number, chord
                     if (isFlagged) {
-                        toggleFlag(idx);
-                        vibrate(gameState.touchSettings.quickTapVibration);
+                        toggleFlag(idx);  // Just unflag
                     } else {
-                        revealCell(idx);
-                        vibrate(gameState.touchSettings.quickTapVibration);
+                        revealCell(idx);  // This handles reveal AND chord opening
                     }
+                    vibrate(gameState.touchSettings.quickTapVibration);
                 }
             }
         }
