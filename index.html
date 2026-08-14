@@ -512,14 +512,14 @@
                     // But first unflag if it's flagged
                     if (isFlagged) {
                         toggleFlag(idx);
-                    // } else {
-                    //     revealCell(idx);  // This handles chord opening too
-                    // }
+                    } else {
+                        revealCell(idx);  // This handles chord opening too
+                    }
                     vibrate(gameState.touchSettings.longPressVibration);
                 } else {
                     // Quick tap: always toggle flag
                     toggleFlag(idx);
-                    revealCell(idx);  // Reveal if not flagged
+                    revealCell(idx);
                     vibrate(gameState.touchSettings.quickTapVibration);
                 }
             } else {
